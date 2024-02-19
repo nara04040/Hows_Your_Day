@@ -1,6 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import SearchIcon from "@mui/icons-material/Search";
+import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
+import SettingsIcon from "@mui/icons-material/Settings";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import DeleteTwoToneIcon from "@mui/icons-material/DeleteTwoTone";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 
 interface Todo {
   id: number;
@@ -69,11 +75,8 @@ export default function Home() {
             </span>
           </div>
           <div className="flex items-center">
-            <button
-              className="p-1 ml-10 mr-5 rounded bg-purple-500 hover:bg-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out"
-              onClick={(e) => handleDeleteClick(e, todo.id)}
-            >
-              삭제
+            <button className="p-1 ml-10 mr-5 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out" onClick={(e) => handleDeleteClick(e, todo.id)}>
+              <DeleteTwoToneIcon color="action" />
             </button>
             <input type="time" id="time" name="time" className="p-2 border rounded" />
           </div>
@@ -85,24 +88,32 @@ export default function Home() {
   return (
     <>
       <div className="min-h-screen bg-gray-100">
-        <div className="container mx-auto p-8 bg-main-background">
+        <div className="container mx-auto p-8 min-h-full bg-main-background">
           <header className="flex justify-between items-center py-4 px-6 bg-main-background text-white">
             <h1 className="text-2xl text-black font-bold">Hows Your Day</h1>
-            <div className="space-x-4">
+            <div className="space-x-3">
               <button className="p-2 rounded bg-purple-500 hover:bg-purple-600">
                 <span className="text-sm text-white font-medium">+ Create</span>
               </button>
-              <button className="p-2 rounded bg-purple-500 hover:bg-purple-600">
-                <span className="text-sm text-black font-medium">Search 아이콘</span>
+              <button className="p-2 rounded">
+                <span className="text-sm text-black font-medium">
+                  <SearchIcon />
+                </span>
               </button>
-              <button className="p-2 rounded bg-purple-500 hover:bg-purple-600">
-                <span className="text-sm text-black font-medium">Notifications 아이콘</span>
+              <button className="p-2 rounded">
+                <span className="text-sm text-black font-medium">
+                  <NotificationsNoneOutlinedIcon />
+                </span>
               </button>
-              <button className="p-2 rounded bg-purple-500 hover:bg-purple-600">
-                <span className="text-sm text-black font-medium">Setting 아이콘</span>
+              <button className="p-2 rounded">
+                <span className="text-sm text-black font-medium">
+                  <SettingsIcon />
+                </span>
               </button>
-              <button className="p-2 rounded bg-purple-500 hover:bg-purple-600">
-                <span className="text-sm text-black font-medium">User 아이콘</span>
+              <button className="p-2 rounde">
+                <span className="text-sm text-black font-medium">
+                  <AccountCircleIcon />
+                </span>
               </button>
             </div>
           </header>
@@ -121,6 +132,11 @@ export default function Home() {
                         Calendar
                       </a>
                     </li>
+                    <li>
+                      <a href="#" className="block p-4 text-black font-bold hover:bg-purple-400 rounded">
+                        Alarm Setting
+                      </a>
+                    </li>
                   </ul>
                 </nav>
               </aside>
@@ -132,7 +148,8 @@ export default function Home() {
                       <div className="flex items-center w-2/4 my-3">
                         <div className=" mr-20">
                           <label htmlFor="date" className="block text-sm font-semibold text-zinc-400 py-3">
-                            Date
+                            <CalendarMonthIcon />
+                            <span className="ml-2 text-sm font-semibold text-zinc-400 py-3">Date</span>
                           </label>
                           <input type="date" id="date" name="date" className="p-2 border rounded" />
                         </div>
