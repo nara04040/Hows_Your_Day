@@ -1,15 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SearchIcon from "@mui/icons-material/Search";
 import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
 import SettingsIcon from "@mui/icons-material/Settings";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import DeleteTwoToneIcon from "@mui/icons-material/DeleteTwoTone";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import { addDoc, collection, deleteDoc, getDocs } from "firebase/firestore";
+import { db } from "../../firebase/firebaseConfig";
 
 interface Todo {
-  id: number;
+  id: string;
   text: string;
   completed: boolean;
 }
@@ -18,22 +20,28 @@ export default function Home() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [task, setTask] = useState<string>("");
 
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState<string>("");
 
-  const addTodo = (e: { preventDefault: () => void }) => {
+  const addTodo = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
     if (!task.trim()) return;
     const newTodo = {
-      id: Date.now(), // random ID 값 생성하는 함수 구현필요
+      id: Date.now().toString(), // random ID 값 생성하는 함수 구현필요
       text: task,
       completed: false,
     };
     setTodos([...todos, newTodo]);
+    try {
+      const docRef = await addDoc(collection(db, "todos"), newTodo);
+      console.log("document written with ID: ", docRef.id);
+    } catch (error) {
+      console.error("Error adding document: ", error);
+    }
     setTask("");
   };
 
-  const handleTodoTextClick = (id: number, text: string) => {
+  const handleTodoTextClick = (id: string, text: string) => {
     setEditingId(id);
     setEditingText(text);
   };
@@ -45,11 +53,39 @@ export default function Home() {
     setEditingId(null);
   };
 
-  const handleDeleteClick = (e: React.MouseEvent<HTMLButtonElement>, id: number) => {
+  const handleDeleteClick = async (e: React.MouseEvent<HTMLButtonElement>, id: string) => {
     e.stopPropagation();
-    const updatedTodos = todos.filter((todo) => todo.id !== id);
-    setTodos(updatedTodos);
+    try {
+      const querySnapshot = await getDocs(collection(db, "todos"));
+      querySnapshot.forEach((doc) => {
+        console.log(doc.id, " => ", doc.data());
+        if (doc.data().id.toString() === id) {
+          deleteDoc(doc.ref);
+        }
+      });
+
+      setTodos(todos.filter((todo) => todo.id.toString() !== id)); // 상태 업데이트
+    } catch (error) {
+      console.error("Error deleting document: ", error);
+    }
   };
+
+  // fetchTodos는 비동기 함수로 next.js에서의 client component에서는 사용이 불가합니다.
+  // server component와 client component를 구분화 필요.
+  const fetchTodos = async () => {
+    const querySnapshot = await getDocs(collection(db, "todos"));
+    const fetchedTodos = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as unknown as Todo[];
+    // as unkonwn as Todo[] 리팩토링 필요 (any 타입 제거) -> 제거하기 위해선 Todo 타입을 정의해야함 -> Todo 타입을 정의하기 위해선 Todo 인터페이스를 정의해야함 -> 해결코드 : interface Todo { id: number; text: string; completed: boolean; }
+    setTodos(fetchedTodos);
+  };
+
+  // serverComponent, clientComponent로 운영한다면 useEffect가 필요없지 않을까?
+  useEffect(() => {
+    fetchTodos();
+  }, []);
 
   const todoItems = todos.map((todo) => (
     <li key={todo.id} className="group p-3 text-black rounded flex justify-between items-center">
@@ -75,7 +111,7 @@ export default function Home() {
             </span>
           </div>
           <div className="flex items-center">
-            <button className="p-1 ml-10 mr-5 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out" onClick={(e) => handleDeleteClick(e, todo.id)}>
+            <button className="p-1 ml-10 mr-5 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out" onClick={(e) => handleDeleteClick(e, todo.id.toString())}>
               <DeleteTwoToneIcon color="action" />
             </button>
             <input type="time" id="time" name="time" className="p-2 border rounded" />
