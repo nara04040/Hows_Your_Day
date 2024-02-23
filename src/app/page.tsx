@@ -7,7 +7,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import DeleteTwoToneIcon from "@mui/icons-material/DeleteTwoTone";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import { addDoc, collection, deleteDoc, getDocs } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, getDocs, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase/firebaseConfig";
 
 interface Todo {
@@ -20,7 +20,7 @@ export default function Home() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [task, setTask] = useState<string>("");
 
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string>("");
   const [editingText, setEditingText] = useState<string>("");
 
   const addTodo = async (e: { preventDefault: () => void }) => {
@@ -46,11 +46,23 @@ export default function Home() {
     setEditingText(text);
   };
 
-  const handleEditSubmit = (e: React.KeyboardEvent<HTMLInputElement> | React.FocusEvent<HTMLInputElement>) => {
+  const handleEditSubmit = async (e: React.KeyboardEvent<HTMLInputElement> | React.FocusEvent<HTMLInputElement>) => {
     e.preventDefault();
-    const updatedTodos = todos.map((todo) => (todo.id === editingId ? { ...todo, text: editingText } : todo));
-    setTodos(updatedTodos);
-    setEditingId(null);
+    try {
+      const querySnapshot = await getDocs(collection(db, "todos"));
+      querySnapshot.forEach((doc) => {
+        console.log(doc.id, " => ", doc.data());
+        if (doc.data().id.toString() === editingId) {
+          updateDoc(doc.ref, { text: editingText });
+        }
+      });
+
+      const updatedTodos = todos.map((todo) => (todo.id === editingId ? { ...todo, text: editingText } : todo));
+      setTodos(updatedTodos);
+    } catch (error) {
+      console.error("Error updating document: ", error);
+    }
+    setEditingId("");
   };
 
   const handleDeleteClick = async (e: React.MouseEvent<HTMLButtonElement>, id: string) => {
