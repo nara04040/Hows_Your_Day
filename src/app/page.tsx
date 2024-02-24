@@ -9,11 +9,13 @@ import DeleteTwoToneIcon from "@mui/icons-material/DeleteTwoTone";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import { addDoc, collection, deleteDoc, getDocs, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase/firebaseConfig";
+import { TimePicker } from "./components/TimePicker";
 
 interface Todo {
   id: string;
   text: string;
   completed: boolean;
+  time?: string;
 }
 
 export default function Home() {
@@ -76,7 +78,7 @@ export default function Home() {
         }
       });
 
-      setTodos(todos.filter((todo) => todo.id.toString() !== id)); // 상태 업데이트
+      setTodos(todos.filter((todo) => todo.id.toString() !== id));
     } catch (error) {
       console.error("Error deleting document: ", error);
     }
@@ -94,10 +96,20 @@ export default function Home() {
     setTodos(fetchedTodos);
   };
 
+  const DateSubmitHandler = (e: { preventDefault: () => void }) => {
+    e.preventDefault();
+    console.log("hi");
+  };
+
   // serverComponent, clientComponent로 운영한다면 useEffect가 필요없지 않을까?
   useEffect(() => {
     fetchTodos();
   }, []);
+
+  const timeClickHandler = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    console.log("hi");
+  };
 
   const todoItems = todos.map((todo) => (
     <li key={todo.id} className="group p-3 text-black rounded flex justify-between items-center">
@@ -126,7 +138,7 @@ export default function Home() {
             <button className="p-1 ml-10 mr-5 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out" onClick={(e) => handleDeleteClick(e, todo.id.toString())}>
               <DeleteTwoToneIcon color="action" />
             </button>
-            <input type="time" id="time" name="time" className="p-2 border rounded" />
+            <TimePicker />
           </div>
         </>
       )}
