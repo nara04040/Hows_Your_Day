@@ -7,13 +7,14 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import DeleteTwoToneIcon from "@mui/icons-material/DeleteTwoTone";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import { addDoc, collection, deleteDoc, doc, getDocs, updateDoc } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, getDocs, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase/firebaseConfig";
 
 interface Todo {
   id: string;
   text: string;
   completed: boolean;
+  time?: string;
 }
 
 export default function Home() {
@@ -22,6 +23,7 @@ export default function Home() {
 
   const [editingId, setEditingId] = useState<string>("");
   const [editingText, setEditingText] = useState<string>("");
+  const [time, setTime] = useState<string>("");
 
   const addTodo = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
@@ -30,11 +32,12 @@ export default function Home() {
       id: Date.now().toString(), // random ID 값 생성하는 함수 구현필요
       text: task,
       completed: false,
+      time: time,
     };
     setTodos([...todos, newTodo]);
+
     try {
-      const docRef = await addDoc(collection(db, "todos"), newTodo);
-      console.log("document written with ID: ", docRef.id);
+      await addDoc(collection(db, "todos"), newTodo);
     } catch (error) {
       console.error("Error adding document: ", error);
     }
@@ -51,7 +54,6 @@ export default function Home() {
     try {
       const querySnapshot = await getDocs(collection(db, "todos"));
       querySnapshot.forEach((doc) => {
-        console.log(doc.id, " => ", doc.data());
         if (doc.data().id.toString() === editingId) {
           updateDoc(doc.ref, { text: editingText });
         }
@@ -65,18 +67,38 @@ export default function Home() {
     setEditingId("");
   };
 
+  const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTime(e.target.value);
+  };
+
+  const submitTimeChange = async (id: string, newTime: string) => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "todos"));
+      querySnapshot.forEach((doc) => {
+        if (doc.data().id.toString() === id) {
+          updateDoc(doc.ref, { time: time });
+        }
+      });
+      const updatedTodos = todos.map((todo) => (todo.id === id ? { ...todo, time: newTime } : todo));
+      setTodos(updatedTodos);
+      console.log();
+    } catch (error) {
+      console.error("Error updating document: ", error);
+    }
+    setEditingId("");
+  };
+
   const handleDeleteClick = async (e: React.MouseEvent<HTMLButtonElement>, id: string) => {
     e.stopPropagation();
     try {
       const querySnapshot = await getDocs(collection(db, "todos"));
       querySnapshot.forEach((doc) => {
-        console.log(doc.id, " => ", doc.data());
         if (doc.data().id.toString() === id) {
           deleteDoc(doc.ref);
         }
       });
 
-      setTodos(todos.filter((todo) => todo.id.toString() !== id)); // 상태 업데이트
+      setTodos(todos.filter((todo) => todo.id.toString() !== id));
     } catch (error) {
       console.error("Error deleting document: ", error);
     }
@@ -126,7 +148,7 @@ export default function Home() {
             <button className="p-1 ml-10 mr-5 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-in-out" onClick={(e) => handleDeleteClick(e, todo.id.toString())}>
               <DeleteTwoToneIcon color="action" />
             </button>
-            <input type="time" id="time" name="time" className="p-2 border rounded" />
+            <input type="time" name="time" value={todo.time} onChange={handleTimeChange} onBlur={() => submitTimeChange(todo.id, time)} />
           </div>
         </>
       )}
@@ -215,8 +237,16 @@ export default function Home() {
                           name="todo"
                           value={task}
                           onChange={(e) => setTask(e.target.value)}
-                          className="w-2/5 p-2 border-solid border-2 border-zinc-400 rounded-l-lg text-black"
+                          className="w-2/5 p-2 border-solid border-2 border-zinc-400 rounded-lg text-black"
                           placeholder="New task"
+                        />
+                        <input
+                          type="time"
+                          id="time"
+                          name="time"
+                          value={time}
+                          onChange={(e) => setTime(e.target.value)}
+                          className="w-1/5 p-2 border-solid border-2 border-zinc-400 rounded-l-lg text-black"
                         />
                         <button type="submit" className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 border-solid border-2 rounded-r-lg border-purple-500">
                           Add
